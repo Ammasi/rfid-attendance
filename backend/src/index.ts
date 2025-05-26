@@ -40,8 +40,8 @@ import errorHandler from "./Middleware/Error.js";
 dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
-const frontend_URL = ["http://192.168.1.8:5174"];
-const backendURL = "192.168.1.8";
+const frontend_URL = ["http://192.168.1.7:5174"];
+const backendURL = "192.168.1.7";
 
 // Create HTTP and WebSocket servers
 const server = http.createServer(app);
@@ -66,7 +66,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(path.join(__dirname,"..", "uploads")));
 
 //Routes
 // Employee routes
