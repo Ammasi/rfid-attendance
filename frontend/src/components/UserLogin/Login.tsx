@@ -2,7 +2,7 @@ import { ChangeEvent, FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
 import { toast } from "react-toastify";
-import loginimage from '../../assets/login.jpg';
+import loginimage from '/login.jpg';
 
 const Login = () => {
   const navigate = useNavigate();

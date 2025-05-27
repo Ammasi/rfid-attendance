@@ -16,7 +16,7 @@ const __dirname = path.dirname(__filename);
 // Local storage setup (same as create)
 const localStorage = multer.diskStorage({
   destination: (_req, _file, cb) => {
-    cb(null, path.join(__dirname, "../uploads"));
+    cb(null, path.join(__dirname, "../../../uploads"));
   },
   filename: (_req, file, cb) => {
     cb(null, `${Date.now()}-${file.originalname}`);

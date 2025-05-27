@@ -15,7 +15,7 @@ import {
   faBars,
 } from "@fortawesome/free-solid-svg-icons";
 import moment from "moment-timezone";
-import chatbg from "../../assets/doodle.jpg";
+import chatbg from "/doodle.jpg";
 import Cookies from "js-cookie";
 
 interface Message {
