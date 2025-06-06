@@ -94,7 +94,6 @@ const Form = () => {
         // Update existing employee
         await axios.put(
           `${backend_URI}/api/employee/${id}?storageType=${storageType}`,
-
           formData,
           {
             headers: { "Content-Type": "multipart/form-data" },

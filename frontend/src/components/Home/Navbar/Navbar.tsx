@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../Context/AuthContext";
 import Sidebar from "../Sidebar/Sidebar";
-// import ChatBox from "../ChatApplication/ChatBox";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars, faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
 import Cookies from "js-cookie";
@@ -18,7 +17,7 @@ interface Employee {
 const Navbar = () => {
   const backend_URI = import.meta.env.VITE_Backend_URI;
   const [data, setData] = useState<Employee[]>([]);
-  const { userEmail, authorized, logout } = useAuth();
+  const { userEmail, authorized, userName, logout } = useAuth();
   const isAuthenticated = !!authorized;
   const [userPhoto, setUserPhoto] = useState<string | null>(
     Cookies.get("userPhoto") || null
@@ -28,9 +27,7 @@ const Navbar = () => {
   const [activeComponent, setActiveComponent] = useState(
     Cookies.get("activeComponent") || "Dashboard"
   );
-  const [name, setName] = useState<string | null>(
-    Cookies.get("userName") || null
-  );
+
 
   useEffect(() => {
     const getUserData = async () => {
@@ -44,8 +41,7 @@ const Navbar = () => {
           );
           if (currentUser) {
             setUserPhoto(currentUser.photo);
-            setName(currentUser.name);
-            localStorage.setItem("userPhoto", currentUser.photo);
+            Cookies.set("userPhoto", currentUser.photo);
           } else {
             setUserPhoto(null);
           }
@@ -98,13 +94,10 @@ const Navbar = () => {
     Cookies.set("chatActive", JSON.stringify(active));
   }, [active]);
 
-  /* RGB 17, 28, 68 → Hex #111C44 1e1f45 */
-  // background‐color: #111C44;
-  // bg-gradient-to-b from-[hsl(217,51%,87%)] to-[hsl(214,41%,78%)]
   return (
     <>
       {/* Navbar */}
-      <div className="fixed text-white top-0 left-0 w-full h-14 bg-[#111C44] z-10 flex justify-between items-center px-4">
+      <div className="fixed text-white top-0 left-0 w-full h-16 bg-[#111C44] z-10 flex justify-between items-center px-4">
         <div className="flex items-center space-x-4">
           <FontAwesomeIcon
             onClick={() => {
@@ -155,9 +148,9 @@ const Navbar = () => {
                   </ul>
                 </div>
               )}
-              {name ? (
+              {userName ? (
                 <h3 className="font-poppins text-sm">
-                  {name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()}
+                  {userName.charAt(0).toUpperCase() + userName.slice(1).toLowerCase()}
                 </h3>
               ) : (
                 <span>Loading..</span>
@@ -178,7 +171,7 @@ const Navbar = () => {
       {!active && (
         <div className="hidden md:block">
           <div
-            className={`fixed top-14 left-0  ${
+            className={`fixed top-16 left-0  ${
               menu
                 ? "w-20 xl:w-24 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-indigo-100 scrollbar-thumb-rounded-lg"
                 : "w-64 xl:w-[260px]"
@@ -260,7 +253,6 @@ const Navbar = () => {
       {/* Main Content */}
       <div
         className={`${
-          // menu ? "md:ml-[6%] md:w-20rem" : "md:ml-[20%]"
           menu ? "md:ml-20" : "md:ml-64"
         } mt-14 h-[calc(100vh-3.5rem)] bg-gradient-to-b from-[#dde6f4] to-[#e4ebfd] transition-all duration-300`}
       >

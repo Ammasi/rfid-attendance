@@ -36,12 +36,18 @@ import currentUserRoute from "./Controllers/attendance/currentUserReport.js";
 import LeaveRouter from "./Controllers/LeaveApply/AvailableLeave.js";
 import connect from "./Config/db.js";
 import errorHandler from "./Middleware/Error.js";
+import NotificationRouter from "./Controllers/Notification/Notification.js";
+import testPushRouter from "./Controllers/Notification/TestPush.js";
+import authenticateUser from "./Middleware/userAuthenticate.js";
+// import webpush from 'web-push';
 
 dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
-const frontend_URL = ["http://192.168.1.7:5174"];
-const backendURL = "192.168.1.7";
+const frontend_URL = ["http://localhost:5174","http://192.168.1.3:5174","http://192.168.1.15:5174"];
+// "http://192.168.1.8:5174",
+const backendURL = "192.168.1.15";
+// const backendURL = "localhost";
 
 // Create HTTP and WebSocket servers
 const server = http.createServer(app);
@@ -63,6 +69,11 @@ app.use(
     credentials: true,
   })
 );
+
+// const vapidKeys = webpush.generateVAPIDKeys();
+// console.log("PUBLIC VAPID KEY:\n", vapidKeys.publicKey);
+// console.log("PRIVATE VAPID KEY:\n", vapidKeys.privateKey);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -100,6 +111,10 @@ app.use("/api/employee/groups", getMessages); // Get messages
 app.use("/api/employee/groups", sendmsgroute); // Send message with optional file
 app.use("/api/employee/groups", previewroute); //preview image from link
 app.use("/api/employee/groups", groupeditroute); //groupname edit and delete
+
+// Notification
+app.use("/api/push", authenticateUser,NotificationRouter);
+app.use("/api/test", testPushRouter);
 
 // Default route
 app.get("/", (req: Request, res: Response) => {

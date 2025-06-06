@@ -1,7 +1,6 @@
 import express from 'express';
 import { Request, Response } from 'express';
 import Message from '../../../Models/msgSchema.js';
-import mongoose from 'mongoose';
 
 const getMessages = express.Router();
 // get group Id Messages 

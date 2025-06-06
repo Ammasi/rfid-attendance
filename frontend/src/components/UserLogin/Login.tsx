@@ -2,7 +2,7 @@ import { ChangeEvent, FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
 import { toast } from "react-toastify";
-import loginimage from '/login.jpg';
+import loginimage from "/login.jpg";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -83,16 +83,6 @@ const Login = () => {
               placeholder="Enter your password"
             />
           </div>
-          
-          {/* <div className="flex justify-between text-sm mt-2 text-gray-300">
-            <label className="flex items-center space-x-2">
-              <input type="checkbox" className="accent-white" />
-              <span>Remember Me</span>
-            </label>
-            <button type="button" className="hover:underline">
-              Forget Password
-            </button>
-          </div> */}
 
           <button
             type="submit"

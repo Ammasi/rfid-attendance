@@ -29,7 +29,7 @@ const localUpload = multer({
     if (["image/jpeg","image/png","image/jpg","image/webp","image/svg","image/heic","image/heif","image/ico"].includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error("Only JPG/PNG allowed"));
+      cb(new Error("image file format not supported"));
     }
   },
 });

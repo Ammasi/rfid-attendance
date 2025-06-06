@@ -15,7 +15,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { useAuth } from "../../Context/AuthContext";
 
 interface SidebarProps {
@@ -35,7 +35,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const [option, setOption] = useState(false);
   const { isAdmin,currentUserId } = useAuth();
-  const navigate = useNavigate();
+
 
   const handleAttendance = () => {
     setOption((prev) => !prev);

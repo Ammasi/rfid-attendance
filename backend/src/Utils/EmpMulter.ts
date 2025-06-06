@@ -13,9 +13,7 @@ const cloudStorage = new CloudinaryStorage({
     public_id: `${Date.now()}-${path.parse(file.originalname).name}`, // Unique ID
     overwrite: false,
     format: file.mimetype.split("/")[1],
-    
   }),
-  
 });
 
 const cloudUpload = multer({ storage: cloudStorage });

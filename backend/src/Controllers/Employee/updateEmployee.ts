@@ -57,6 +57,7 @@ routeredit.put("/:id",
       return res.status(400).json({ message: "Invalid employee ID" });
     }
 
+    
   try {
    const useCloud = req.query.storageType === "cloud";
    let photoUrl:string | undefined;

@@ -17,6 +17,8 @@ import {
 import moment from "moment-timezone";
 import chatbg from "/doodle.jpg";
 import Cookies from "js-cookie";
+import { useParams, useNavigate } from "react-router-dom";
+import {ToastNotification} from './ToastNotification';
 
 interface Message {
   groupId: string;
@@ -63,6 +65,7 @@ const backend_URI = import.meta.env.VITE_Backend_URI;
 
 const ChatApp: React.FC = () => {
   const { currentUserId, userName, isAdmin } = useAuth();
+  const { groupId: routeGroupId } = useParams<{ groupId: string }>();
   const [groups, setGroups] = useState<Group[]>([]);
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -78,10 +81,21 @@ const ChatApp: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const socket = useRef<any>(null);
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
-  //chatbox sidebar
+  // chatbox sidebar
   const [isSidebarChatOpen, setIsSidebarChatOpen] = useState(false);
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastTitle, setToastTitle] = useState("");
+  const [toastBody, setToastBody] = useState("");
 
   const firstLoad = useRef(true);
+  const navigate = useNavigate();
+
+    // Utility: simple mobile check (you can improve this as needed)
+  const isMobile = () => {
+    return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|Mobile/i.test(
+      navigator.userAgent
+    );
+  };
 
   useEffect(() => {
     if (firstLoad.current) {
@@ -92,6 +106,23 @@ const ChatApp: React.FC = () => {
       window.location.reload();
     }
   }, [activeGroup]);
+
+  useEffect(() => {
+    if (routeGroupId) {
+      setActiveGroup(routeGroupId);
+
+      // (Optional) Mark all messages in that group as "seen" on your server:
+      axios
+        .patch(
+          `${backend_URI}/api/messages/seen/${routeGroupId}`,
+          {},
+          { withCredentials: true }
+        )
+        .catch((err) =>
+          console.error("Error marking messages as seen:", err)
+        );
+    }
+  }, [routeGroupId]);
 
   useEffect(() => {
     socket.current = io(`${backend_URI}`, {
@@ -123,8 +154,8 @@ const ChatApp: React.FC = () => {
     fetchemployee();
   }, []);
 
-  //new messages fetching using socket
   const handleNewMessage = (message: Message) => {
+    // 1) Always update the local chat state
     setMessages((prev) => {
       const existingIndex = prev.findIndex((m) => m.tempId === message.tempId);
       if (existingIndex !== -1) {
@@ -134,6 +165,50 @@ const ChatApp: React.FC = () => {
       }
       return [...prev, message];
     });
+
+    // 2) If on mobile and permission is granted, show a native SW notification
+    if (isMobile() && Notification.permission === "granted") {
+      navigator.serviceWorker
+        .getRegistration()
+        .then((reg) => {
+          if (!reg) return;
+          // Build title/body
+          const title = `New message from ${message.sender?.name}`;
+          const body =
+            message.content.length > 50
+              ? message.content.slice(0, 47) + "..."
+              : message.content;
+
+          // Cast to 'any' to allow 'renotify'
+          const options = ({
+            body,
+            icon: "/favicon.ico",
+            badge: "/favicon-192x192.png",
+            data: {
+              url: `/chat/${message.groupId}`,
+              groupId: message.groupId,
+              messageId: message.tempId,
+            },
+            tag: message.groupId,
+            renotify: true,
+          } as any);
+
+          reg.showNotification(title, options); 
+        })
+        .catch((err) => {
+          console.error("Failed to show SW notification:", err);
+        });
+    } else {
+      // 3) Otherwise (desktop or no permission), show an in-page toast
+      const title = `New message from ${message.sender?.name}`;
+      const body =
+        message.content.length > 50
+          ? message.content.slice(0, 47) + "..."
+          : message.content;
+      setToastTitle(title);
+      setToastBody(body);
+      setToastVisible(true);
+    }
   };
 
   //fetch active group messages all messages
@@ -174,14 +249,18 @@ const ChatApp: React.FC = () => {
           { withCredentials: true }
         );
         // filter
-        const filteredGroups = isAdmin ? data: data.filter((group:any)=>group.members.includes(userName));
+        const filteredGroups = isAdmin
+          ? data
+          : data.filter((group: any) => group.members.includes(userName));
         setGroups(filteredGroups);
         // Restore the last active group from localStorage
         const storedGroupId = Cookies.get("activeGroupId");
 
         if (
           storedGroupId &&
-          filteredGroups.some((group: { _id: string }) => group._id === storedGroupId)
+          filteredGroups.some(
+            (group: { _id: string }) => group._id === storedGroupId
+          )
         ) {
           setActiveGroup(storedGroupId);
         }
@@ -190,7 +269,7 @@ const ChatApp: React.FC = () => {
       }
     };
     fetchGroups();
-  }, [isAdmin,userName]);
+  }, [isAdmin, userName]);
 
   const getGroupInitial = (name: string) => {
     if (!name) return "?";
@@ -275,9 +354,14 @@ const ChatApp: React.FC = () => {
         });
       }
 
+      const currentGroup = groups.find(g=>g._id === activeGroup);
+      const allMemberIds:string[] = currentGroup? currentGroup.members:[];
+      const recipientIds = allMemberIds.filter(userId => userId !== currentUserId);
+
       const finalMessage = {
         ...optimisticMessage,
-        file: imageUrl || undefined, // Correctly includes Cloudinary URL send link to backend
+        file: imageUrl || undefined,
+        recipientIds // Correctly includes Cloudinary URL send link to backend
       };
 
       await axios.post(
@@ -446,7 +530,9 @@ const ChatApp: React.FC = () => {
   const handleGroupSelect = (groupId: string) => {
     // const selectedGroup = groups.find(group => group._id === groupId);
     // if(selectedGroup && selectedGroup.members.length >+ 0){
-    setActiveGroup(groupId);
+
+    // setActiveGroup(groupId);
+    navigate(`/chat/${groupId}`);
     setIsSidebarChatOpen(false);
     // }
   };
@@ -576,6 +662,15 @@ const ChatApp: React.FC = () => {
 
   return (
     <div className="flex h-full ">
+      
+        {/* === TOAST (PC only) === */}
+      {/* <ToastNotification
+        title={toastTitle}
+        body={toastBody}
+        visible={toastVisible}
+        onClose={() => setToastVisible(false)}
+      /> */}
+
       {isSidebarChatOpen && (
         <div
           className={`${
@@ -788,12 +883,12 @@ const ChatApp: React.FC = () => {
 
       {/* chat section */}
       <div className="flex-1 flex flex-col bg-[#ffffff] relative">
-        <div className="bg-[hsl(214,41%,50%)]  text-[#1d47a6] px-2 sm:px-4 py-2 flex justify-between items-center">
+        <div className="bg-[hsl(214,41%,50%)]  text-[#1d47a6] px-2 sm:px-4 py-2 pt-4 flex justify-between items-center">
           <div className="flex items-center">
             <button
               className={`${
                 isSidebarChatOpen ? "hidden" : "block"
-              } mr-2 text-white`} // lg:hidden
+              } mr-2 text-white`}
               onClick={() => setIsSidebarChatOpen(true)}
             >
               <FontAwesomeIcon
